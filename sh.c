@@ -1,10 +1,10 @@
 // Shell.
-
 #include "types.h"
 #include "user.h"
 #include "fcntl.h"
 
 // Parsed command representation
+#define NULL  0
 #define EXEC  1
 #define REDIR 2
 #define PIPE  3
@@ -157,6 +157,20 @@ main(void)
 
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0) {
+
+
+
+
+    // Check if user is setting a variable.
+    int needle = strchr(buf, '=');
+    if (needle != NULL) {
+      // User is setting a variable.
+      char *variable_name = '';
+      //char *variable_value = strtok(NULL, "\0");
+      //sys_setvariable(variable_name, variable_value);
+      continue;
+    }
+
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
       buf[strlen(buf)-1] = 0;  // chop \n

@@ -7,7 +7,6 @@
 #include "mmu.h"
 #include "proc.h"
 
-
 int sys_yield(void)
 {
   yield();
@@ -148,5 +147,6 @@ int sys_getvariable(char* variable_name, char* variable_value) {
 }
 
 int sys_remvariable(char* variable_name) {
+  // TODO
   return -1;
 }
