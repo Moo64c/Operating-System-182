@@ -10,7 +10,7 @@
 
 int sys_yield(void)
 {
-  yield();
+  yield(); 
   return 0;
 }
 
@@ -40,7 +40,6 @@ sys_kill(void)
 
   if(argint(0, &pid) < 0)
     return -1;
-
   return kill(pid);
 }
 
@@ -96,57 +95,4 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
-}
-
-// Size of the variables array.
-#define MAX_VARIABLES 32
-
-typedef struct sh_variable {
- char *name;
- char *value;
-} sh_variable;
-
-struct sh_variable global_variables[MAX_VARIABLES];
-int next_index = 0;
-
-/**
- * Sets a variable in the global variables list.
- */
-int sys_setvariable(char* variable_name, char* variable_value) {
-  if (next_index >= MAX_VARIABLES) {
-    // No more room.
-    return -1;
-  }
-
-  // Copy strings into struct.
-  struct sh_variable *new_var = &global_variables[next_index];
-  new_var->name = variable_name;
-  new_var->value = variable_value;
-
-  // Set this in the array.
-  global_variables[next_index] = *new_var;
-  next_index++;
-  return 0;
-}
-
-/**
- * Gets a variable by name.
- * @param  variable_name  variable name to search for.
- * @param  variable_value pointer to the value (as reutrn value)
- * @return          0 on success, -1 on not variable found.
- */
-int sys_getvariable(char* variable_name, char* variable_value) {
-  for (int index = 0; index < next_index; index++) {
-    if (strncmp((&global_variables[index])->name, variable_name, strlen(variable_name)) == 0) {
-      // Found the variable.
-      variable_value = (&global_variables[index])->value;
-      return 0;
-    }
-  }
-  // Not found.
-  return -1;
-}
-
-int sys_remvariable(char* variable_name) {
-  return -1;
 }
