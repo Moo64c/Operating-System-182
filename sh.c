@@ -162,12 +162,19 @@ main(void)
 
 
     // Check if user is setting a variable.
-    int needle = strchr(buf, '=');
+    int needle = (int) strchr(buf, '=');
     if (needle != NULL) {
+      int name_length = (needle - ((int) buf) + 1);
       // User is setting a variable.
-      char *variable_name = '';
-      //char *variable_value = strtok(NULL, "\0");
-      //sys_setvariable(variable_name, variable_value);
+      char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
+      int index = 0;
+      while(*(buf + index) != '=') {
+        variable_name[index] = buf[index];
+        index++;
+      }
+
+      char *variable_value = (char *) needle;
+      sys_setvariable(variable_name, variable_value);
       continue;
     }
 
