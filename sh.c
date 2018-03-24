@@ -12,7 +12,95 @@
 #define BACK  5
 
 #define MAXARGS 10
+#define MAX_HISTORY 16
+#define NULL 0
+/*******************************functions added by Noy - Linkedlist for history**************************************/
 
+typedef struct node{
+	int cmd_num;
+	char* cmd_desc;
+	struct node* next;
+}node;
+
+typedef struct linkedlist{
+	struct node* first;
+	struct node* last;
+}linkedlist;
+
+linkedlist* list_append(linkedlist* mylist, node* addnode){
+
+    linkedlist* new_list = mylist;
+    if(new_list == NULL){
+	new_list = malloc(sizeof(linkedlist));
+	new_list->first = addnode;
+	new_list->last = addnode;
+
+    }
+     else{
+         node* ptr = new_list->first;
+	 if(ptr == NULL){
+            ptr = addnode;
+	}
+        else {
+	 while(ptr->next != NULL)
+               ptr = ptr->next;
+               if(ptr->next == NULL){
+                  ptr->next = addnode;
+		  new_list->last = addnode;
+                }
+            }
+	}
+            return new_list;
+    }
+
+void print_last_k(linkedlist* mylist , int size){
+        node *curr = mylist->first;
+		int _size = size;
+        while((curr != NULL)&&(_size > 0 )){
+            printf(2, "num : %d , desc : %s \n", curr->cmd_num ,curr->cmd_desc);
+		   _size--;
+            curr = curr->next;
+				}
+			}
+
+void node_free(node* node_){
+	if(node_!=NULL){
+
+        free(node_->cmd_desc);
+        free(node_);
+	}
+	return;
+}
+linkedlist* delete_first(linkedlist* history_list){
+
+    if(history_list == NULL)
+        return history_list;
+    else{
+        node* tmp = history_list->first->next;
+        node* to_delete = history_list->first;
+        history_list->first = tmp;
+        node_free(to_delete);
+        return history_list;
+    }
+}
+void list_free(linkedlist *mylist){
+	 if(mylist != NULL){
+	   node *curr_node = mylist->first;
+	   node *tmp;
+     while(curr_node!=NULL){
+                tmp = curr_node;
+                curr_node = curr_node->next;
+                node_free(tmp);
+
+            }
+
+        }
+
+	free(mylist);
+        return;
+}
+
+/*******************************functions added by Noy - Linkedlist for history**************************************/
 struct cmd {
   int type;
 };
@@ -144,8 +232,13 @@ getcmd(char *buf, int nbuf)
 int
 main(void)
 {
+
   static char buf[100];
   int fd;
+  //char noy[] = "test";
+  int commands_counter = 0;
+  struct linkedlist *history_list = NULL;
+
 
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
@@ -156,7 +249,37 @@ main(void)
   }
 
   // Read and run input commands.
-  while(getcmd(buf, sizeof(buf)) >= 0) {
+  while(getcmd(buf, sizeof(buf)) >= 0){
+    //noy added for hisotry function
+    commands_counter = commands_counter + 1;
+    struct node *set_link = NULL;
+    set_link = (struct node*) malloc(sizeof(struct node));
+    set_link->cmd_num = commands_counter;
+    set_link->cmd_desc = malloc(strlen(buf)+1);
+    strcpy(set_link->cmd_desc, buf);
+    set_link->next = NULL;
+
+    if(commands_counter < MAX_HISTORY){
+       history_list = list_append(history_list, set_link);
+    }
+    else{
+        delete_first(history_list);
+        history_list = list_append(history_list, set_link);
+
+        }
+     if(strcmp("history\n", buf) == 0){
+        print_last_k(history_list , 16);
+        continue;
+    }
+
+   else if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
+      int size = atoi(buf+11);
+      print_last_k(history_list , size);
+      continue;
+    }
+
+     //noy added for hisotry function
+     //
 
 
 
@@ -169,26 +292,28 @@ main(void)
       char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
       int index = 0;
       while(*(buf + index) != '=') {
-        variable_name[index] = buf[index];
-        index++;
+       variable_name[index] = buf[index];
+       index++;
       }
 
       char *variable_value = (char *) needle;
       sys_setvariable(variable_name, variable_value);
       continue;
     }
-
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
       buf[strlen(buf)-1] = 0;  // chop \n
-      if(chdir(buf+3) < 0)
+      if(chdir(buf+3) < 0){
         printf(2, "cannot cd %s\n", buf+3);
+
+    }
       continue;
     }
     if(fork1() == 0)
       runcmd(parsecmd(buf));
     wait();
   }
+  list_free(history_list);
   exit();
 }
 

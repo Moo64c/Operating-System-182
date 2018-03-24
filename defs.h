@@ -121,6 +121,10 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 
+// Custom
+int             sys_setvariable(char* variable_name, char* variable_value);
+
+
 // swtch.S
 void            swtch(struct context**, struct context*);
 
