@@ -548,7 +548,18 @@ int next_index = 0;
  * Sets a variable in the global variables list.
  */
 int gsetvariable(char* variable_name, char* variable_value) {
-  cprintf("setting variable %s => %s\n", variable_name, variable_value);
+  // Check variable name name is valid.
+  for (int index = 0; index < strlen(variable_name); index++) {
+    if
+        (!(
+              (buf[index] >= 65 && buf[index] <= 90)
+          ||  (buf[index] >= 97 && buf[index] <= 122)
+        )) {
+          cprintf("%s is an invalid variable name.\n", variable_name);
+          return -2;
+    }
+  }
+
   int write_index = next_index;
   // Check if we already have this variable name.
   for (int index = 0; index < write_index; index++) {
@@ -556,12 +567,12 @@ int gsetvariable(char* variable_name, char* variable_value) {
     if (strncmp(variable_name, (&global_variables[index])->name, strlen(variable_name)) == 0) {
       // Found the variable named this way.
       // Free the space occupied by the old value and name (since we'll be overwriting them);
-      // FIXME LOL
+      // FIXME free space and shit
       write_index = index;
       break;
     }
   }
-  
+
   if (write_index >= MAX_VARIABLES) {
     // No more room.
     return -1;
