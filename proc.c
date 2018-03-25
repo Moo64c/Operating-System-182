@@ -549,19 +549,34 @@ int next_index = 0;
  */
 int gsetvariable(char* variable_name, char* variable_value) {
   cprintf("setting variable %s => %s\n", variable_name, variable_value);
-  if (next_index >= MAX_VARIABLES) {
+  int write_index = next_index;
+  // Check if we already have this variable name.
+  for (int index = 0; index < write_index; index++) {
+    cprintf("%s vs. %s", variable_name, (&global_variables[write_index])->name);
+    if (strncmp(variable_name, (&global_variables[index])->name, strlen(variable_name)) == 0) {
+      // Found the variable named this way.
+      // Free the space occupied by the old value and name (since we'll be overwriting them);
+      // FIXME LOL
+      write_index = index;
+      break;
+    }
+  }
+  
+  if (write_index >= MAX_VARIABLES) {
     // No more room.
     return -1;
   }
-
   // Copy strings into struct.
-  struct sh_variable *new_var = &global_variables[next_index];
+  struct sh_variable *new_var = &global_variables[write_index];
   new_var->name = variable_name;
   new_var->value = variable_value;
 
   // Set this in the array.
-  global_variables[next_index] = *new_var;
-  next_index++;
+  global_variables[write_index] = *new_var;
+  if (write_index == next_index) {
+    // We wrote the last item.
+    next_index++;
+  }
 
   gprintvariables();
   return 0;
@@ -590,15 +605,6 @@ int ggetvariable(char* variable_name, char *variable_value) {
 int gremvariable(char* variable_name) {
   // TODO
   return -1;
-}
-
-char *removeFirstChar (char * charBuffer) {
-  char *str;
-  if (strlen(charBuffer) == 0)
-    str = charBuffer;
-  else
-    str = charBuffer + 1;
-  return str;
 }
 
 void gprintvariables() {

@@ -302,11 +302,25 @@ main(void)
               ||  (buf[index] >= 97 && buf[index] <= 122)
             )) {
               // Variable name ended.
-              char * var_name =  (char *) malloc(sizeof(char) * 128);;
+              char * var_name =  (char *) malloc(sizeof(char) * 128);
               char * var_value = (char *) malloc(sizeof(char) * 128);
               memmove(var_name, buf + isVariableName, (index - isVariableName));
               ggetvariable(var_name, var_value);
-              printf(2, "found %s \n", var_value);
+              // Rebuild buf.
+              int newbuf_length = strlen(buf) + strlen(var_value) - (strlen(var_name) - 1);
+              char * new_buf = (char *) malloc(sizeof(char) * newbuf_length);
+              if (isVariableName - 1 > 0) {
+                // Copy buffer until the $ character.
+                memmove(new_buf, buf, isVariableName);
+              }
+              // Copy value of variable_value where $var_name is present.
+              memmove(new_buf+(isVariableName-1), var_value, strlen(var_value));
+              // Copy the rest of the buffer.
+              memmove(new_buf+(isVariableName-1) + strlen(var_value), buf+(isVariableName+1)+strlen(var_name), strlen(new_buf+(isVariableName-1) + strlen(var_value)));
+              for (int index = 0; index < strlen(new_buf); index ++) {
+                buf[index] = *(new_buf + index);
+              }
+
               isVariableName = -1;
             }
       }
