@@ -248,49 +248,6 @@ main(void)
 
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0) {
-    //noy added for hisotry function
-    commands_counter = commands_counter + 1;
-    struct node *set_link = NULL;
-    set_link = (struct node*) malloc(sizeof(struct node));
-    set_link->cmd_num = commands_counter;
-    set_link->cmd_desc = malloc(strlen(buf)+1);
-    strcpy(set_link->cmd_desc, buf);
-    set_link->next = NULL;
-
-    if(commands_counter < MAX_HISTORY){
-       history_list = list_append(history_list, set_link);
-    }
-    else{
-        delete_first(history_list);
-        history_list = list_append(history_list, set_link);
-
-        }
-     if(strcmp("history\n", buf) == 0){
-        print_last_k(history_list , 16);
-        continue;
-    }
-
-  else if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
-    int size = atoi(buf+11);
-    print_last_k(history_list , size);
-    continue;
-  }
-
-    // Check if user is setting a variable.
-    int needle = (int) strchr(buf, '=');
-    if (needle != NULL) {
-      int name_length = (needle - ((int) buf));
-      // User is setting a variable.
-
-      // Set room for the value.
-      char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
-      char *variable_value = (char *)malloc(sizeof(char) * (strlen(buf) - name_length - 1));
-      memmove(variable_name, buf, name_length);
-      memmove(variable_value, buf+name_length+1, (strlen(buf) - name_length - 1));
-      gsetvariable(variable_name, variable_value);
-      continue;
-    }
-
     // Check for $ signs, to replace variables.
     int isVariableName = -1;
     for (int index = 0; index < strlen(buf); index++) {
@@ -335,6 +292,50 @@ main(void)
         gprintvariables();
       }
     }
+
+    //noy added for hisotry function
+    commands_counter = commands_counter + 1;
+    struct node *set_link = NULL;
+    set_link = (struct node*) malloc(sizeof(struct node));
+    set_link->cmd_num = commands_counter;
+    set_link->cmd_desc = malloc(strlen(buf)+1);
+    strcpy(set_link->cmd_desc, buf);
+    set_link->next = NULL;
+
+    if(commands_counter < MAX_HISTORY){
+       history_list = list_append(history_list, set_link);
+    }
+    else{
+        delete_first(history_list);
+        history_list = list_append(history_list, set_link);
+
+        }
+     if(strcmp("history\n", buf) == 0){
+        print_last_k(history_list , 16);
+        continue;
+    }
+
+  else if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
+    int size = atoi(buf+11);
+    print_last_k(history_list , size);
+    continue;
+  }
+
+    // Check if user is setting a variable.
+    int needle = (int) strchr(buf, '=');
+    if (needle != NULL) {
+      int name_length = (needle - ((int) buf));
+      // User is setting a variable.
+
+      // Set room for the value.
+      char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
+      char *variable_value = (char *)malloc(sizeof(char) * (strlen(buf) - name_length - 1));
+      memmove(variable_name, buf, name_length);
+      memmove(variable_value, buf+name_length+1, (strlen(buf) - name_length - 1));
+      gsetvariable(variable_name, variable_value);
+      continue;
+    }
+
 
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
