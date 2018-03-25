@@ -248,51 +248,6 @@ main(void)
 
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0) {
-    // Check for $ signs, to replace variables.
-    int isVariableName = -1;
-    for (int index = 0; index < strlen(buf); index++) {
-      if (isVariableName > -1) {
-        // Check if variable name has ended.
-        if
-            (!(
-                  (buf[index] >= 65 && buf[index] <= 90)
-              ||  (buf[index] >= 97 && buf[index] <= 122)
-            )) {
-              // Variable name ended.
-              char * var_name =  (char *) malloc(sizeof(char) * 128);
-              char * var_value = (char *) malloc(sizeof(char) * 128);
-              memmove(var_name, buf + isVariableName, (index - isVariableName));
-              ggetvariable(var_name, var_value);
-              // Rebuild buf.
-              int newbuf_length = strlen(buf) + strlen(var_value) - (strlen(var_name) - 1);
-              char * new_buf = (char *) malloc(sizeof(char) * newbuf_length);
-              if (isVariableName - 1 > 0) {
-                // Copy buffer until the $ character.
-                memmove(new_buf, buf, isVariableName);
-              }
-              // Copy value of variable_value where $var_name is present (except for last char == '\0')..
-              memmove(new_buf+(isVariableName-1), var_value, strlen(var_value) - 1);
-              // Copy the rest of the buffer.
-              memmove(new_buf+(isVariableName-1) + strlen(var_value)-1, buf+(isVariableName)+strlen(var_name), strlen(buf+(isVariableName)+strlen(var_name)));
-              for (int index = 0; index < strlen(new_buf); index ++) {
-                if (index != strlen(new_buf) - 1 && *(new_buf + index) == '\0') {
-                  buf[index] = ' ';
-                  continue;
-                }
-                buf[index] = *(new_buf + index);
-              }
-              buf[strlen(new_buf)] = '\0';
-              isVariableName = -1;
-            }
-      }
-      if (buf[index] == '$') {
-        // check until a non-letter character appears.
-        // (could be 0, but in every use we add 1 anyway)
-        isVariableName = index + 1;
-        gprintvariables();
-      }
-    }
-
     //noy added for hisotry function
     commands_counter = commands_counter + 1;
     struct node *set_link = NULL;
@@ -335,6 +290,53 @@ main(void)
       gsetvariable(variable_name, variable_value);
       continue;
     }
+
+      // Check for $ signs, to replace variables.
+      int isVariableName = -1;
+      for (int index = 0; index < strlen(buf); index++) {
+        if (isVariableName > -1) {
+          // Check if variable name has ended.
+          if
+              (!(
+                    (buf[index] >= 65 && buf[index] <= 90)
+                ||  (buf[index] >= 97 && buf[index] <= 122)
+              )) {
+                // Variable name ended.
+                char * var_name =  (char *) malloc(sizeof(char) * 128);
+                char * var_value = (char *) malloc(sizeof(char) * 128);
+                memmove(var_name, buf + isVariableName, (index - isVariableName));
+                ggetvariable(var_name, var_value);
+                // Rebuild buf.
+                int newbuf_length = strlen(buf) + strlen(var_value) - (strlen(var_name) - 1);
+                char * new_buf = (char *) malloc(sizeof(char) * newbuf_length);
+                if (isVariableName - 1 > 0) {
+                  // Copy buffer until the $ character.
+                  memmove(new_buf, buf, isVariableName);
+                }
+                // Copy value of variable_value where $var_name is present (except for last char == '\0')..
+                memmove(new_buf+(isVariableName-1), var_value, strlen(var_value) - 1);
+                // Copy the rest of the buffer.
+                memmove(new_buf+(isVariableName-1) + strlen(var_value)-1, buf+(isVariableName)+strlen(var_name), strlen(buf+(isVariableName)+strlen(var_name)));
+                for (int indexB = 0; indexB < strlen(new_buf); indexB ++) {
+                  if (indexB != strlen(new_buf) - 1 && *(new_buf + indexB) == '\0') {
+                    buf[indexB] = ' ';
+                    continue;
+                  }
+                  buf[indexB] = *(new_buf + indexB);
+                }
+                buf[strlen(new_buf)] = '\0';
+                // We changed the current buf, go back to the start.
+                index = -1;
+                isVariableName = -1;
+              }
+        }
+        if (buf[index] == '$') {
+          // check until a non-letter character appears.
+          // (could be 0, but in every use we add 1 anyway)
+          isVariableName = index + 1;
+          gprintvariables();
+        }
+      }
 
 
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
