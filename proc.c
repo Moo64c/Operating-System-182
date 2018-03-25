@@ -566,7 +566,8 @@ int gsetvariable(char* variable_name, char* variable_value) {
     if (strncmp(variable_name, (&global_variables[index])->name, strlen(variable_name)) == 0) {
       // Found the variable named this way.
       // Free the space occupied by the old value and name (since we'll be overwriting them);
-      // FIXME free space and shit
+      memset((&global_variables[index])->name, 0, strlen((&global_variables[index])->name));
+      memset((&global_variables[index])->value, 0, strlen((&global_variables[index])->value));
       write_index = index;
       break;
     }
@@ -613,14 +614,13 @@ int ggetvariable(char* variable_name, char *variable_value) {
 int gremvariable(char* variable_name) {
   for (int index = 0; index < next_index; index++) {
     if (strncmp((&global_variables[index])->name, variable_name, strlen(variable_name)) == 0) {
-      // Found the variable.
-      memset(variable_name, 0, strlen(variable_name));
-      memset(variable_value, 0, strlen(variable_value));
+      // Found the variable... just set 0 to everything.
+      memset((&global_variables[index])->name, 0, strlen((&global_variables[index])->name));
+      memset((&global_variables[index])->value, 0, strlen((&global_variables[index])->value));
       return 0;
     }
   }
   // Not found.
-  return -1;
   return -1;
 }
 
