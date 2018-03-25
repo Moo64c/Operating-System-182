@@ -247,7 +247,7 @@ main(void)
   }
 
   // Read and run input commands.
-  while(getcmd(buf, sizeof(buf)) >= 0){
+  while(getcmd(buf, sizeof(buf)) >= 0) {
     //noy added for hisotry function
     commands_counter = commands_counter + 1;
     struct node *set_link = NULL;
@@ -313,14 +313,18 @@ main(void)
                 // Copy buffer until the $ character.
                 memmove(new_buf, buf, isVariableName);
               }
-              // Copy value of variable_value where $var_name is present.
-              memmove(new_buf+(isVariableName-1), var_value, strlen(var_value));
+              // Copy value of variable_value where $var_name is present (except for last char == '\0')..
+              memmove(new_buf+(isVariableName-1), var_value, strlen(var_value) - 1);
               // Copy the rest of the buffer.
-              memmove(new_buf+(isVariableName-1) + strlen(var_value), buf+(isVariableName+1)+strlen(var_name), strlen(new_buf+(isVariableName-1) + strlen(var_value)));
+              memmove(new_buf+(isVariableName-1) + strlen(var_value)-1, buf+(isVariableName)+strlen(var_name), strlen(buf+(isVariableName)+strlen(var_name)));
               for (int index = 0; index < strlen(new_buf); index ++) {
+                if (index != strlen(new_buf) - 1 && *(new_buf + index) == '\0') {
+                  buf[index] = ' ';
+                  continue;
+                }
                 buf[index] = *(new_buf + index);
               }
-
+              buf[strlen(new_buf)] = '\0';
               isVariableName = -1;
             }
       }

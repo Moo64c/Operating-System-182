@@ -552,8 +552,8 @@ int gsetvariable(char* variable_name, char* variable_value) {
   for (int index = 0; index < strlen(variable_name); index++) {
     if
         (!(
-              (buf[index] >= 65 && buf[index] <= 90)
-          ||  (buf[index] >= 97 && buf[index] <= 122)
+              (variable_name[index] >= 65 && variable_name[index] <= 90)
+          ||  (variable_name[index] >= 97 && variable_name[index] <= 122)
         )) {
           cprintf("%s is an invalid variable name.\n", variable_name);
           return -2;
@@ -563,7 +563,6 @@ int gsetvariable(char* variable_name, char* variable_value) {
   int write_index = next_index;
   // Check if we already have this variable name.
   for (int index = 0; index < write_index; index++) {
-    cprintf("%s vs. %s", variable_name, (&global_variables[write_index])->name);
     if (strncmp(variable_name, (&global_variables[index])->name, strlen(variable_name)) == 0) {
       // Found the variable named this way.
       // Free the space occupied by the old value and name (since we'll be overwriting them);
@@ -600,9 +599,7 @@ int gsetvariable(char* variable_name, char* variable_value) {
  * @return          0 on success, -1 on not variable found.
  */
 int ggetvariable(char* variable_name, char *variable_value) {
-  cprintf("looping: ");
   for (int index = 0; index < next_index; index++) {
-    cprintf("%d -- [name: %s ] [value: %s ] \n", index, (&global_variables[index])->name , (&global_variables[index])->value);
     if (strncmp((&global_variables[index])->name, variable_name, strlen(variable_name)) == 0) {
       // Found the variable.
       memmove(variable_value, (&global_variables[index])->value, strlen((&global_variables[index])->value));
