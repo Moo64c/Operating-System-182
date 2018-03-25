@@ -24,9 +24,10 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int yield(void);
-int setvariable(char* variable, char* value);
-int getvariable(char* variable, char* value);
-int remvariable(char* variable);
+int gsetvariable(char* variable, char* value);
+int ggetvariable(char* variable, char* value);
+int gremvariable(char* variable);
+void gprintvariables();
 
 // ulib.c
 int stat(char*, struct stat*);

@@ -1,6 +1,6 @@
+#include "param.h"
 #include "types.h"
 #include "defs.h"
-#include "param.h"
 #include "memlayout.h"
 #include "mmu.h"
 #include "x86.h"
@@ -38,10 +38,10 @@ struct cpu*
 mycpu(void)
 {
   int apicid, i;
-  
+
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
-  
+
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
@@ -124,7 +124,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
   p = allocproc();
-  
+
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
@@ -275,7 +275,7 @@ wait(void)
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  
+
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for exited children.
@@ -325,7 +325,7 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -418,7 +418,7 @@ void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
-  
+
   if(p == 0)
     panic("sleep");
 
@@ -531,4 +531,80 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+// Size of the variables array.
+#define MAX_VARIABLES 32
+
+typedef struct sh_variable {
+ char *name;
+ char *value;
+} sh_variable;
+
+struct sh_variable global_variables[MAX_VARIABLES];
+int next_index = 0;
+
+/**
+ * Sets a variable in the global variables list.
+ */
+int gsetvariable(char* variable_name, char* variable_value) {
+  cprintf("setting variable %s => %s\n", variable_name, variable_value);
+  if (next_index >= MAX_VARIABLES) {
+    // No more room.
+    return -1;
+  }
+
+  // Copy strings into struct.
+  struct sh_variable *new_var = &global_variables[next_index];
+  new_var->name = variable_name;
+  new_var->value = variable_value;
+
+  // Set this in the array.
+  global_variables[next_index] = *new_var;
+  next_index++;
+
+  gprintvariables();
+  return 0;
+}
+
+/**
+ * Gets a variable by name.
+ * @param  variable_name  variable name to search for.
+ * @param  variable_value pointer to the value (as reutrn value)
+ * @return          0 on success, -1 on not variable found.
+ */
+int ggetvariable(char* variable_name, char *variable_value) {
+  cprintf("looping: ");
+  for (int index = 0; index < next_index; index++) {
+    cprintf("%d -- [name: %s ] [value: %s ] \n", index, (&global_variables[index])->name , (&global_variables[index])->value);
+    if (strncmp((&global_variables[index])->name, variable_name, strlen(variable_name)) == 0) {
+      // Found the variable.
+      memmove(variable_value, (&global_variables[index])->value, strlen((&global_variables[index])->value));
+      return 0;
+    }
+  }
+  // Not found.
+  return -1;
+}
+
+int gremvariable(char* variable_name) {
+  // TODO
+  return -1;
+}
+
+char *removeFirstChar (char * charBuffer) {
+  char *str;
+  if (strlen(charBuffer) == 0)
+    str = charBuffer;
+  else
+    str = charBuffer + 1;
+  return str;
+}
+
+void gprintvariables() {
+  cprintf("==== Variables:\n");
+    for(int index = 0; index < next_index; index++) {
+    cprintf("%s => %s\n", (&global_variables[index])->name, (&global_variables[index])->value);
+  }
+  cprintf("==============\n");
 }

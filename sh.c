@@ -232,13 +232,11 @@ getcmd(char *buf, int nbuf)
 int
 main(void)
 {
-
   static char buf[100];
   int fd;
   //char noy[] = "test";
   int commands_counter = 0;
   struct linkedlist *history_list = NULL;
-
 
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
@@ -272,34 +270,54 @@ main(void)
         continue;
     }
 
-   else if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
-      int size = atoi(buf+11);
-      print_last_k(history_list , size);
-      continue;
-    }
-
-     //noy added for hisotry function
-     //
-
-
-
+  else if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
+    int size = atoi(buf+11);
+    print_last_k(history_list , size);
+    continue;
+  }
 
     // Check if user is setting a variable.
     int needle = (int) strchr(buf, '=');
     if (needle != NULL) {
-      int name_length = (needle - ((int) buf) + 1);
+      int name_length = (needle - ((int) buf));
       // User is setting a variable.
-      char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
-      int index = 0;
-      while(*(buf + index) != '=') {
-       variable_name[index] = buf[index];
-       index++;
-      }
 
-      char *variable_value = (char *) needle;
-      sys_setvariable(variable_name, variable_value);
+      // Set room for the value.
+      char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
+      char *variable_value = (char *)malloc(sizeof(char) * (strlen(buf) - name_length - 1));
+      memmove(variable_name, buf, name_length);
+      memmove(variable_value, buf+name_length+1, (strlen(buf) - name_length - 1));
+      gsetvariable(variable_name, variable_value);
       continue;
     }
+
+    // Check for $ signs, to replace variables.
+    int isVariableName = -1;
+    for (int index = 0; index < strlen(buf); index++) {
+      if (isVariableName > -1) {
+        // Check if variable name has ended.
+        if
+            (!(
+                  (buf[index] >= 65 && buf[index] <= 90)
+              ||  (buf[index] >= 97 && buf[index] <= 122)
+            )) {
+              // Variable name ended.
+              char * var_name =  (char *) malloc(sizeof(char) * 128);;
+              char * var_value = (char *) malloc(sizeof(char) * 128);
+              memmove(var_name, buf + isVariableName, (index - isVariableName));
+              ggetvariable(var_name, var_value);
+              printf(2, "found %s \n", var_value);
+              isVariableName = -1;
+            }
+      }
+      if (buf[index] == '$') {
+        // check until a non-letter character appears.
+        // (could be 0, but in every use we add 1 anyway)
+        isVariableName = index + 1;
+        gprintvariables();
+      }
+    }
+
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
       buf[strlen(buf)-1] = 0;  // chop \n
