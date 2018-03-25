@@ -611,7 +611,16 @@ int ggetvariable(char* variable_name, char *variable_value) {
 }
 
 int gremvariable(char* variable_name) {
-  // TODO
+  for (int index = 0; index < next_index; index++) {
+    if (strncmp((&global_variables[index])->name, variable_name, strlen(variable_name)) == 0) {
+      // Found the variable.
+      memset(variable_name, 0, strlen(variable_name));
+      memset(variable_value, 0, strlen(variable_value));
+      return 0;
+    }
+  }
+  // Not found.
+  return -1;
   return -1;
 }
 
