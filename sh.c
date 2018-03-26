@@ -92,7 +92,11 @@ linkedlist* delete_first(linkedlist* history_list) {
         node* tmp = history_list->first->next;
         node* to_delete = history_list->first;
         history_list->first = tmp;
-
+        node* pointer = history_list->first;
+        for(int i = 0; i<16; i++){
+            pointer->cmd_num = i+1;
+            pointer = pointer->next;
+        }
         node_free(to_delete);
         return history_list;
     }
@@ -269,12 +273,13 @@ main(void)
     strcpy(set_link->cmd_desc, buf);
     set_link->next = NULL;
 
-    if(commands_counter < MAX_HISTORY) {
+    if(commands_counter <= MAX_HISTORY) {
        history_list = list_append(history_list, set_link);
     }
     else {
-        delete_first(history_list);
+        
         history_list = list_append(history_list, set_link);
+        history_list = delete_first(history_list);
 
     }
     start_cmd_loop:
