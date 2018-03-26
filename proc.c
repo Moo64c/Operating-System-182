@@ -253,7 +253,7 @@ exit(void)
   end_op();
   curproc->cwd = 0;
   curproc->etime = ticks;
-  
+
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
@@ -390,9 +390,79 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+        #ifdef DEFAULT
+            if(p->state != RUNNABLE)
+              continue;
+        #else
+        #ifdef FCFS
 
+          struct proc *minP = 0;
+
+          if(p->state != RUNNABLE)
+            continue;
+
+          // ignore init and sh processes from FCFS
+          if(p->pid > 1)
+          {
+            if (minP != 0){
+              // here I find the process with the lowest creation time (the first one that was created)
+              if(p->ctime < minP->ctime)
+                minP = p;
+            }
+            else
+                minP = p;
+          }
+
+          // If I found the process which I created first and it is runnable I run it
+          //(in the real FCFS I should not check if it is runnable, but for testing purposes I have to make this control, otherwise every time I launch
+          // a process which does I/0 operation (every simple command) everything will be blocked
+          if(minP != 0 && minP->state == RUNNABLE)
+              p = minP;
+        #else
+        #ifdef SRT
+
+          // TODO
+
+            struct proc *highP = 0;
+            struct proc *p1 = 0;
+
+            if(p->state != RUNNABLE)
+              continue;
+            // Choose the process with highest priority (among RUNNABLEs)
+            highP = p;
+            for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
+              if((p1->state == RUNNABLE) && (highP->priority > p1->priority))
+                highP = p1;
+            }
+
+            if(highP != 0)
+              p = highP;
+
+        #else
+        #ifdef CFSD
+
+          // TODO
+
+
+          if(p->state != RUNNABLE)
+            continue;
+
+          int totalT = totalTickets();
+          int draw = -1;
+
+        	if (totalT > 0 || draw <= 0)
+        		draw = random(totalT);
+
+          draw = draw - p->tickets;
+
+          // process with a great number of tickets has more probability to put draw to 0 or negative and execute
+          if(draw >= 0)
+            continue;
+
+        #endif
+        #endif
+        #endif
+        #endif
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
