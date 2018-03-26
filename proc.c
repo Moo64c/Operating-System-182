@@ -112,6 +112,12 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  // Reset timing.
+  p->ctime = ticks;
+  p->etime = 0;
+  p->rtime = 0;
+  p->iotime = 0;
+
   return p;
 }
 
@@ -246,7 +252,8 @@ exit(void)
   iput(curproc->cwd);
   end_op();
   curproc->cwd = 0;
-
+  curproc->etime = ticks;
+  
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
@@ -329,14 +336,14 @@ wait2(int pid, int* wtime, int* rtime, int* iotime)
       if(p->parent != curproc || p->pid != pid) {
           // not good enough.
            continue;
-      }          
-       
+      }
+
       havekids = 1;
-      if(p->state == ZOMBIE){        
+      if(p->state == ZOMBIE){
         // Found one.
         *wtime= p->etime - p->ctime - p->rtime - p->iotime;
         *rtime= p->rtime;
-        *iotime = p->iotime; 
+        *iotime = p->iotime;
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
