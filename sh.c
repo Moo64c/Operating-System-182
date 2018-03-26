@@ -16,48 +16,47 @@
 #define NULL 0
 /*******************************functions added by Noy - Linkedlist for history**************************************/
 
-typedef struct node{
+typedef struct node {
 	int cmd_num;
 	char* cmd_desc;
 	struct node* next;
-}node;
+} node;
 
-typedef struct linkedlist{
+typedef struct linkedlist {
 	struct node* first;
 	struct node* last;
-}linkedlist;
+} linkedlist;
 
 linkedlist* list_append(linkedlist* mylist, node* addnode){
 
-    linkedlist* new_list = mylist;
-    if(new_list == NULL){
-	new_list = malloc(sizeof(linkedlist));
-	new_list->first = addnode;
-	new_list->last = addnode;
-
+linkedlist* new_list = mylist;
+if (new_list == NULL) {
+  new_list = malloc(sizeof(linkedlist));
+  new_list->first = addnode;
+  new_list->last = addnode;
+}
+else{
+  node* ptr = new_list->first;
+  if(ptr == NULL){
+    ptr = addnode;
+  }
+  else {
+	   while(ptr->next != NULL)
+      ptr = ptr->next;
+      if(ptr->next == NULL){
+        ptr->next = addnode;
+        new_list->last = addnode;
+      }
     }
-     else{
-         node* ptr = new_list->first;
-	 if(ptr == NULL){
-            ptr = addnode;
 	}
-        else {
-	 while(ptr->next != NULL)
-               ptr = ptr->next;
-               if(ptr->next == NULL){
-                  ptr->next = addnode;
-		  new_list->last = addnode;
-                }
-            }
-	}
-            return new_list;
-    }
+  return new_list;
+}
 
 char* print_last_k(linkedlist* mylist , int size){
         node *curr = mylist->first;
         int _size = size;
         char* result =NULL;
-        while((curr != NULL)&&(_size > 1 )){            
+        while((curr != NULL)&&(_size > 1 )){
 		   _size--;
                    curr = curr->next;
 				}
@@ -65,52 +64,50 @@ char* print_last_k(linkedlist* mylist , int size){
             result = curr->cmd_desc;
         }
         return result;
-}		
-			
+}
+
 void print_all_history(linkedlist* mylist , int size){
         node *curr = mylist->first;
         int _size = size;
-        while((curr != NULL)&&(_size > 0 )){            
-                printf(2, "%d.%s \n", curr->cmd_num ,curr->cmd_desc);	   
+        while((curr != NULL)&&(_size > 0 )){
+                printf(2, "%d.%s \n", curr->cmd_num ,curr->cmd_desc);
                 _size--;
                 curr = curr->next;
-                }      
-           
+                }
+
         }
 
 void node_free(node* node_){
 	if(node_!=NULL){
-
         free(node_->cmd_desc);
         free(node_);
 	}
 	return;
 }
-linkedlist* delete_first(linkedlist* history_list){
 
+linkedlist* delete_first(linkedlist* history_list) {
     if(history_list == NULL)
         return history_list;
     else{
         node* tmp = history_list->first->next;
         node* to_delete = history_list->first;
         history_list->first = tmp;
-        
+
         node_free(to_delete);
         return history_list;
     }
 }
-void list_free(linkedlist *mylist){
+
+void list_free(linkedlist *mylist) {
 	 if(mylist != NULL){
 	   node *curr_node = mylist->first;
 	   node *tmp;
      while(curr_node!=NULL){
-                tmp = curr_node;
-                curr_node = curr_node->next;
-                node_free(tmp);
-
-            }
-
-        }
+      tmp = curr_node;
+      curr_node = curr_node->next;
+      node_free(tmp);
+    }
+  }
 
 	free(mylist);
         return;
@@ -249,7 +246,7 @@ int
 main(void)
 {
   static char buf[100];
-  int fd;  
+  int fd;
   int commands_counter = 0;
   struct linkedlist *history_list = NULL;
 
@@ -262,7 +259,7 @@ main(void)
   }
 
   // Read and run input commands.
-  while(getcmd(buf, sizeof(buf)) >= 0) {
+  while (getcmd(buf, sizeof(buf)) >= 0) {
     //noy added for hisotry function
     commands_counter = commands_counter + 1;
     struct node *set_link = NULL;
@@ -272,20 +269,29 @@ main(void)
     strcpy(set_link->cmd_desc, buf);
     set_link->next = NULL;
 
-    if(commands_counter < MAX_HISTORY){
+    if(commands_counter < MAX_HISTORY) {
        history_list = list_append(history_list, set_link);
     }
-    else{
+    else {
         delete_first(history_list);
         history_list = list_append(history_list, set_link);
 
-        }
-     if(strcmp("history\n", buf) == 0){
-        print_all_history(history_list , 16);
-        continue;
+    }
+    start_cmd_loop:
+    if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
+      int size = atoi(buf+11);
+      char * result = print_last_k(history_list , size);
+
+      // Overwrite buf.
+      for(int resultIndex = 0; resultIndex <= strlen(result); resultIndex++) {
+        buf[resultIndex] = *(result +resultIndex);
+      }
     }
 
- 
+    if(strcmp("history\n", buf) == 0) {
+      print_all_history(history_list, MAX_HISTORY);
+      continue;
+    }
 
     // Check if user is setting a variable.
     int needle = (int) strchr(buf, '=');
@@ -302,59 +308,52 @@ main(void)
       continue;
     }
 
-      // Check for $ signs, to replace variables.
-      int isVariableName = -1;
-      for (int index = 0; index < strlen(buf); index++) {
-        if (isVariableName > -1) {
-          // Check if variable name has ended.
-          if
-              (!(
-                    (buf[index] >= 65 && buf[index] <= 90)
-                ||  (buf[index] >= 97 && buf[index] <= 122)
-              )) {
-                // Variable name ended.
-                char * var_name =  (char *) malloc(sizeof(char) * 128);
-                char * var_value = (char *) malloc(sizeof(char) * 128);
-                memmove(var_name, buf + isVariableName, (index - isVariableName));
-                ggetvariable(var_name, var_value);
-                // Rebuild buf.
-                int newbuf_length = strlen(buf) + strlen(var_value) - (strlen(var_name) - 1);
-                char * new_buf = (char *) malloc(sizeof(char) * newbuf_length);
-                if (isVariableName - 1 > 0) {
-                  // Copy buffer until the $ character.
-                  memmove(new_buf, buf, isVariableName);
-                }
-                // Copy value of variable_value where $var_name is present (except for last char == '\0')..
-                memmove(new_buf+(isVariableName-1), var_value, strlen(var_value) - 1);
-                // Copy the rest of the buffer.
-                memmove(new_buf+(isVariableName-1) + strlen(var_value)-1, buf+(isVariableName)+strlen(var_name), strlen(buf+(isVariableName)+strlen(var_name)));
-                for (int indexB = 0; indexB < strlen(new_buf); indexB ++) {
-                  if (indexB != strlen(new_buf) - 1 && *(new_buf + indexB) == '\0') {
-                    buf[indexB] = ' ';
-                    continue;
-                  }
-                  buf[indexB] = *(new_buf + indexB);
-                }
-                buf[strlen(new_buf)] = '\0';
-                // We changed the current buf, go back to the start.
-                index = -1;
-                isVariableName = -1;
-              }
-        }
-        if (buf[index] == '$') {
-          // check until a non-letter character appears.
-          // (could be 0, but in every use we add 1 anyway)
-          isVariableName = index + 1;
-          gprintvariables();
+    // Check for $ signs, to replace variables.
+    int isVariableName = -1;
+    for (int index = 0; index < strlen(buf); index++) {
+      if (isVariableName > -1) {
+        // Check if variable name has ended.
+        if
+          (!(
+                (buf[index] >= 65 && buf[index] <= 90)
+            ||  (buf[index] >= 97 && buf[index] <= 122)
+          )) {
+          // Variable name ended.
+          char * var_name =  (char *) malloc(sizeof(char) * 128);
+          char * var_value = (char *) malloc(sizeof(char) * 128);
+          memmove(var_name, buf + isVariableName, (index - isVariableName));
+          ggetvariable(var_name, var_value);
+          // Rebuild buf.
+          int newbuf_length = strlen(buf) + strlen(var_value) - (strlen(var_name) - 1);
+          char * new_buf = (char *) malloc(sizeof(char) * newbuf_length);
+          if (isVariableName - 1 > 0) {
+            // Copy buffer until the $ character.
+            memmove(new_buf, buf, isVariableName);
+          }
+          // Copy value of variable_value where $var_name is present (except for last char == '\0')..
+          memmove(new_buf+(isVariableName-1), var_value, strlen(var_value) - 1);
+          // Copy the rest of the buffer.
+          memmove(new_buf+(isVariableName-1) + strlen(var_value)-1, buf+(isVariableName)+strlen(var_name), strlen(buf+(isVariableName)+strlen(var_name)));
+          for (int indexB = 0; indexB < strlen(new_buf); indexB ++) {
+            if (indexB != strlen(new_buf) - 1 && *(new_buf + indexB) == '\0') {
+              buf[indexB] = ' ';
+              continue;
+            }
+            buf[indexB] = *(new_buf + indexB);
+          }
+          buf[strlen(new_buf)] = '\0';
+          // We changed the current buf, go back to the start.
+          isVariableName = -1;
+          goto start_cmd_loop;
         }
       }
-      
-    if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
-        int size = atoi(buf+11);        
-        buf = print_last_k(history_list , size);
-   
-        
-  }
+      if (buf[index] == '$') {
+        // check until a non-letter character appears.
+        // (could be 0, but in every use we add 1 anyway)
+        isVariableName = index + 1;
+        gprintvariables();
+      }
+    }
 
 
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
