@@ -19,7 +19,6 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
-int debug = 1;
 
 void
 pinit(void)
@@ -213,11 +212,6 @@ fork(void)
 
   pid = np->pid;
 
-  // Set creation time.
-  np->ctime  = ticks;
-  np->etime  = -1;
-  np->iotime = 0;
-  np->rtime  = 0;
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
@@ -254,17 +248,6 @@ exit(void)
   curproc->cwd = 0;
 
   acquire(&ptable.lock);
-
-  // Calculate run time.
-  curproc->etime = ticks;
-  curproc->rtime = curproc->etime - curproc->iotime - curproc->ctime;
-
-  if (debug) {
-    cprintf("========= Process %s, pid: %d runtime data: ==========\n", curproc->name, curproc->pid);
-    cprintf(" ctime: %d\n etime: %d\n iotime: %d\n rtime: %d\n", curproc->ctime, curproc->etime, curproc->iotime, curproc->rtime);
-    cprintf("======================================================\n");
-  }
-
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
@@ -332,10 +315,10 @@ wait(void)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait2(void)
+wait2(int pid, int* wtime, int* rtime, int* iotime)
 {
   struct proc *p;
-  int havekids, pid;
+  int havekids;
   struct proc *curproc = myproc();
 
   acquire(&ptable.lock);
@@ -343,12 +326,17 @@ wait2(void)
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc)
-        continue;
+      if(p->parent != curproc || p->pid != pid) {
+          // not good enough.
+           continue;
+      }          
+       
       havekids = 1;
-      if(p->state == ZOMBIE){
+      if(p->state == ZOMBIE){        
         // Found one.
-        pid = p->pid;
+        *wtime= p->etime - p->ctime - p->rtime - p->iotime;
+        *rtime= p->rtime;
+        *iotime = p->iotime; 
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
@@ -358,7 +346,7 @@ wait2(void)
         p->killed = 0;
         p->state = UNUSED;
         release(&ptable.lock);
-        return pid;
+        return p->pid;
       }
     }
 
@@ -402,9 +390,9 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
-
       switchuvm(p);
       p->state = RUNNING;
+
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -500,15 +488,11 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
-  // Keep track of sleeping time.
-  int startSleep = ticks;
+
   sched();
 
   // Tidy up.
   p->chan = 0;
-
-  // Add sleep count to io timer.
-  p->iotime += (ticks - startSleep);
 
   // Reacquire original lock.
   if(lk != &ptable.lock){  //DOC: sleeplock2
@@ -654,9 +638,8 @@ int gsetvariable(char* variable_name, char* variable_value) {
     // We wrote the last item.
     next_index++;
   }
-  if (debug) {
-    gprintvariables();
-  }
+
+  gprintvariables();
   return 0;
 }
 
@@ -692,7 +675,6 @@ int gremvariable(char* variable_name) {
 }
 
 void gprintvariables() {
-
   cprintf("==== Variables:\n");
     for(int index = 0; index < next_index; index++) {
     cprintf("%s => %s\n", (&global_variables[index])->name, (&global_variables[index])->value);
