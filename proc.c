@@ -124,6 +124,8 @@ found:
   p->iotime = 0;
   // Set normal priority.
   p->priority = PRIORITY_NORMAL;
+  //set approx-run-time for SRT
+  p->approxRtime = QUANTUM;
 
   return p;
 }
@@ -197,6 +199,8 @@ fork(void)
   struct proc *np;
   struct proc *curproc = myproc();
 
+
+  
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
@@ -232,7 +236,9 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-
+  
+  np->approxRtime = QUANTUM; //dealing with SRT SCHEDULING
+  
   release(&ptable.lock);
 
   return pid;
@@ -432,22 +438,28 @@ scheduler(void)
         #else
         #ifdef SRT
 
-          // TODO
-
-            struct proc *highP = 0;
-            struct proc *p1 = 0;
-
-            if(p->state != RUNNABLE)
-              continue;
-            // Choose the process with highest priority (among RUNNABLEs)
-            highP = p;
-            for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
-              if((p1->state == RUNNABLE) && (highP->priority > p1->priority))
-                highP = p1;
-            }
-
-            if(highP != 0)
-              p = highP;
+        if(p->state != RUNNABLE)
+            continue;
+        
+        struct proc *p1 = 0;
+        struct proc *SRTproc = 0;
+        float min_time = p->approxRtime;
+        
+        //Choose the process with the shortest approxRtime
+        for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
+           if((p1->state == RUNNABLE) && (p1->approxRtime < min_time)){
+            if (debug) {
+                cprintf("Chose process %s over %s\n", p1->name, p->name);
+              }
+              min_time = p1->approxRtime;
+              SRTproc = p1;
+            } 
+        }
+        if(SRTproc != 0) {
+            p = SRTproc;
+          }       
+    
+   
 
         #else
         #ifdef CFSD
@@ -493,7 +505,9 @@ scheduler(void)
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
-
+    if(p->rtime == p->approxRtime){
+        p->approxRtime = p->approxRtime + (ALPHA * p->approxRtime); 
+    }
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
