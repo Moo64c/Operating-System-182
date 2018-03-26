@@ -277,7 +277,7 @@ main(void)
        history_list = list_append(history_list, set_link);
     }
     else {
-        
+
         history_list = list_append(history_list, set_link);
         history_list = delete_first(history_list);
 
@@ -295,21 +295,6 @@ main(void)
 
     if(strcmp("history\n", buf) == 0) {
       print_all_history(history_list, MAX_HISTORY);
-      continue;
-    }
-
-    // Check if user is setting a variable.
-    int needle = (int) strchr(buf, '=');
-    if (needle != NULL) {
-      int name_length = (needle - ((int) buf));
-      // User is setting a variable.
-
-      // Set room for the value.
-      char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
-      char *variable_value = (char *)malloc(sizeof(char) * (strlen(buf) - name_length - 1));
-      memmove(variable_name, buf, name_length);
-      memmove(variable_value, buf+name_length+1, (strlen(buf) - name_length - 1));
-      gsetvariable(variable_name, variable_value);
       continue;
     }
 
@@ -360,6 +345,20 @@ main(void)
       }
     }
 
+    // Check if user is setting a variable.
+    int needle = (int) strchr(buf, '=');
+    if (needle != NULL) {
+      int name_length = (needle - ((int) buf));
+      // User is setting a variable.
+
+      // Set room for the value.
+      char *variable_name = (char *) malloc((sizeof(char) * name_length) + 1);
+      char *variable_value = (char *)malloc(sizeof(char) * (strlen(buf) - name_length - 1));
+      memmove(variable_name, buf, name_length);
+      memmove(variable_value, buf+name_length+1, (strlen(buf) - name_length - 1));
+      gsetvariable(variable_name, variable_value);
+      continue;
+    }
 
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
