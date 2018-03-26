@@ -12,3 +12,4 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
 #define QUANTUM      5  //number of ticks before switch process
+#define ALPHA        0.5// alpha paramter for SRT scheduling - shortest job is first - approx rtime is = Ai + a*Ai

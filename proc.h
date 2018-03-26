@@ -57,7 +57,12 @@ struct proc {
   int iotime;
   // Running time.
   int rtime;
+
+  // approx run time for Shortest Remaining Time (SCHEDFLAG=SRT).
+  float approxRtime;
+
   float priority;
+
 };
 
 // Process memory is laid out contiguously, low addresses first:
