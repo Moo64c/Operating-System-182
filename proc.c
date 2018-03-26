@@ -469,7 +469,7 @@ scheduler(void)
             if((p1->state == RUNNABLE) && (currentRTRatio < minRTRatio)) {
               // Better ratio.
               if (debug) {
-                cprintf("Chose process %s over %s\n", minRTRatioProc->name, p1->name);
+                cprintf("Chose process %d - %s over %d - %s\n", p1->pid, p1->name, p->pid, p->name);
               }
               minRTRatioProc = p1;
             }
@@ -736,8 +736,9 @@ int gsetvariable(char* variable_name, char* variable_value) {
     // We wrote the last item.
     next_index++;
   }
-
-  gprintvariables();
+  if (debug) {
+    gprintvariables();
+  }
   return 0;
 }
 
