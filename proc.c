@@ -19,6 +19,7 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+int debug = 1;
 
 void
 pinit(void)
@@ -212,6 +213,11 @@ fork(void)
 
   pid = np->pid;
 
+  // Set creation time.
+  np->ctime  = ticks;
+  np->etime  = -1;
+  np->iotime = 0;
+  np->rtime  = 0;
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
@@ -248,6 +254,17 @@ exit(void)
   curproc->cwd = 0;
 
   acquire(&ptable.lock);
+
+  // Calculate run time.
+  curproc->etime = ticks;
+  curproc->rtime = curproc->etime - curproc->iotime - curproc->ctime;
+
+  if (debug) {
+    cprintf("========= Process %s, pid: %d runtime data: ==========\n", curproc->name, curproc->pid);
+    cprintf(" ctime: %d\n etime: %d\n iotime: %d\n rtime: %d\n", curproc->ctime, curproc->etime, curproc->iotime, curproc->rtime);
+    cprintf("======================================================\n");
+  }
+
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
@@ -340,9 +357,9 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
+
       switchuvm(p);
       p->state = RUNNING;
-
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -438,11 +455,15 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
-
+  // Keep track of sleeping time.
+  int startSleep = ticks;
   sched();
 
   // Tidy up.
   p->chan = 0;
+
+  // Add sleep count to io timer.
+  p->iotime += (ticks - startSleep);
 
   // Reacquire original lock.
   if(lk != &ptable.lock){  //DOC: sleeplock2
@@ -588,8 +609,9 @@ int gsetvariable(char* variable_name, char* variable_value) {
     // We wrote the last item.
     next_index++;
   }
-
-  gprintvariables();
+  if (debug) {
+    gprintvariables();
+  }
   return 0;
 }
 
@@ -625,6 +647,7 @@ int gremvariable(char* variable_name) {
 }
 
 void gprintvariables() {
+
   cprintf("==== Variables:\n");
     for(int index = 0; index < next_index; index++) {
     cprintf("%s => %s\n", (&global_variables[index])->name, (&global_variables[index])->value);
