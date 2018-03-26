@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#define debug 1
 #define PRIORITY_HIGH 0.75
 #define PRIORITY_NORMAL 1.0
 #define PRIORITY_LOW 1.25
@@ -215,10 +216,14 @@ fork(void)
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
-  for(i = 0; i < NOFILE; i++)
-    if(curproc->ofile[i])
+  for(i = 0; i < NOFILE; i++) {
+    if(curproc->ofile[i]) {
       np->ofile[i] = filedup(curproc->ofile[i]);
+    }
+  }
   np->cwd = idup(curproc->cwd);
+  // Copy parent's priority.
+  np->priority = curproc->priority;
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
@@ -461,8 +466,11 @@ scheduler(void)
           for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
             // Calculate running time ratio.
             currentRTRatio = (p1->rtime * p1->priority) / (p1->rtime + wtime);
-            if((p1->state == RUNNABLE) && (currentRTRatio < minRTRatio) {
+            if((p1->state == RUNNABLE) && (currentRTRatio < minRTRatio)) {
               // Better ratio.
+              if (debug) {
+                cprintf("Chose process %s over %s\n", minRTRatioProc->name, p1->name);
+              }
               minRTRatioProc = p1;
             }
           }
