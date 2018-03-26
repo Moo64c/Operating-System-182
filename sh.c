@@ -53,15 +53,30 @@ linkedlist* list_append(linkedlist* mylist, node* addnode){
             return new_list;
     }
 
-void print_last_k(linkedlist* mylist , int size){
+char* print_last_k(linkedlist* mylist , int size){
         node *curr = mylist->first;
-		int _size = size;
-        while((curr != NULL)&&(_size > 0 )){
-            printf(2, "num : %d , desc : %s \n", curr->cmd_num ,curr->cmd_desc);
+        int _size = size;
+        char* result =NULL;
+        while((curr != NULL)&&(_size > 1 )){            
 		   _size--;
-            curr = curr->next;
+                   curr = curr->next;
 				}
-			}
+        if(curr !=NULL && _size == 1){
+            result = curr->cmd_desc;
+        }
+        return result;
+}		
+			
+void print_all_history(linkedlist* mylist , int size){
+        node *curr = mylist->first;
+        int _size = size;
+        while((curr != NULL)&&(_size > 0 )){            
+                printf(2, "%d.%s \n", curr->cmd_num ,curr->cmd_desc);	   
+                _size--;
+                curr = curr->next;
+                }      
+           
+        }
 
 void node_free(node* node_){
 	if(node_!=NULL){
@@ -79,6 +94,7 @@ linkedlist* delete_first(linkedlist* history_list){
         node* tmp = history_list->first->next;
         node* to_delete = history_list->first;
         history_list->first = tmp;
+        
         node_free(to_delete);
         return history_list;
     }
@@ -233,8 +249,7 @@ int
 main(void)
 {
   static char buf[100];
-  int fd;
-  //char noy[] = "test";
+  int fd;  
   int commands_counter = 0;
   struct linkedlist *history_list = NULL;
 
@@ -266,15 +281,11 @@ main(void)
 
         }
      if(strcmp("history\n", buf) == 0){
-        print_last_k(history_list , 16);
+        print_all_history(history_list , 16);
         continue;
     }
 
-  else if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
-    int size = atoi(buf+11);
-    print_last_k(history_list , size);
-    continue;
-  }
+ 
 
     // Check if user is setting a variable.
     int needle = (int) strchr(buf, '=');
@@ -337,6 +348,13 @@ main(void)
           gprintvariables();
         }
       }
+      
+    if(buf[0] == 'h' && buf[1] == 'i' && buf[2] == 's' && buf[3] == 't' && buf[4] == 'o' && buf[5] == 'r' && buf[6] == 'y' && buf[7] == ' '&& buf[8] == '-' && buf[9] == 'l'){
+        int size = atoi(buf+11);        
+        buf = print_last_k(history_list , size);
+   
+        
+  }
 
 
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
