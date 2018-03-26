@@ -7,6 +7,11 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#define debug 1
+#define PRIORITY_HIGH 0.75
+#define PRIORITY_NORMAL 1.0
+#define PRIORITY_LOW 1.25
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -117,6 +122,8 @@ found:
   p->etime = 0;
   p->rtime = 0;
   p->iotime = 0;
+  // Set normal priority.
+  p->priority = PRIORITY_NORMAL;
 
   return p;
 }
@@ -209,10 +216,14 @@ fork(void)
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
-  for(i = 0; i < NOFILE; i++)
-    if(curproc->ofile[i])
+  for(i = 0; i < NOFILE; i++) {
+    if(curproc->ofile[i]) {
       np->ofile[i] = filedup(curproc->ofile[i]);
+    }
+  }
   np->cwd = idup(curproc->cwd);
+  // Copy parent's priority.
+  np->priority = curproc->priority;
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
@@ -440,24 +451,34 @@ scheduler(void)
 
         #else
         #ifdef CFSD
-
-          // TODO
-
-
           if(p->state != RUNNABLE)
             continue;
 
-          int totalT = totalTickets();
-          int draw = -1;
+          struct proc *minRTRatioProc = 0;
+          struct proc *p1 = 0;
 
-        	if (totalT > 0 || draw <= 0)
-        		draw = random(totalT);
+          int wtime =  ticks - p->ctime - p->iotime - p->rtime;
+          float minRTRatio = (p->rtime * p->priority) / (p->rtime + wtime);
+          float currentRTRatio = 0;
 
-          draw = draw - p->tickets;
+          // Choose the process with lowest RT ratio (among RUNNABLEs).
+          minRTRatioProc = p;
+          for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
+            // Calculate running time ratio.
+            currentRTRatio = (p1->rtime * p1->priority) / (p1->rtime + wtime);
+            if((p1->state == RUNNABLE) && (currentRTRatio < minRTRatio)) {
+              // Better ratio.
+              if (debug) {
+                cprintf("Chose process %s over %s\n", minRTRatioProc->name, p1->name);
+              }
+              minRTRatioProc = p1;
+            }
+          }
 
-          // process with a great number of tickets has more probability to put draw to 0 or negative and execute
-          if(draw >= 0)
-            continue;
+          if(minRTRatioProc != 0) {
+            p = minRTRatioProc;
+          }
+
 
         #endif
         #endif
