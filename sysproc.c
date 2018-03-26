@@ -137,17 +137,16 @@ int
 sys_wait2(void)
 {
   int pid;
-  int* wtime;
-  int* rtime;
-  int* iotime;
-  
+  int* wtime = 0;
+  int* rtime = 0;
+  int* iotime = 0;
+
   if(argint(0, &pid) < 0)
     return -1;
-  
+
   argint(1, wtime);
   argint(2, rtime);
   argint(3, iotime);
-  
+
   return wait2(pid, wtime, rtime, iotime);
 }
-
