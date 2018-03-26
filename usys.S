@@ -33,3 +33,5 @@ SYSCALL(ggetvariable)
 SYSCALL(gsetvariable)
 SYSCALL(gremvariable)
 SYSCALL(gprintvariables)
+SYSCALL(wait2)
+

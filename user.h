@@ -28,6 +28,7 @@ int gsetvariable(char* variable, char* value);
 int ggetvariable(char* variable, char* value);
 int gremvariable(char* variable);
 void gprintvariables();
+int wait2(int pid, int* wtime, int* rtime, int* iotime);
 
 // ulib.c
 int stat(char*, struct stat*);

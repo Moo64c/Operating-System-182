@@ -25,3 +25,4 @@
 #define SYS_ggetvariable 24
 #define SYS_gremvariable 25
 #define SYS_gprintvariables 26
+#define SYS_wait2 27

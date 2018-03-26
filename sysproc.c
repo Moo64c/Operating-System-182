@@ -128,6 +128,26 @@ int sys_gprintvariables(void) {
 int sys_gremvariable(void) {
   char* variable_name;
   argstr(0, &variable_name);
-  // TODO
-  return -1;
+  return gremvariable(variable_name);
 }
+
+
+
+int
+sys_wait2(void)
+{
+  int pid;
+  int* wtime;
+  int* rtime;
+  int* iotime;
+  
+  if(argint(0, &pid) < 0)
+    return -1;
+  
+  argint(1, wtime);
+  argint(2, rtime);
+  argint(3, iotime);
+  
+  return wait2(pid, wtime, rtime, iotime);
+}
+

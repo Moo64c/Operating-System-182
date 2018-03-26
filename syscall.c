@@ -108,6 +108,7 @@ extern int sys_ggetvariable(void);
 extern int sys_gsetvariable(void);
 extern int sys_gremvariable(void);
 extern int sys_gprintvariables(void);
+extern int sys_wait2(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -136,6 +137,7 @@ static int (*syscalls[])(void) = {
 [SYS_gsetvariable] sys_gsetvariable,
 [SYS_gremvariable] sys_gremvariable,
 [SYS_gprintvariables] sys_gprintvariables,
+[SYS_wait2] sys_wait2,
 };
 
 void
