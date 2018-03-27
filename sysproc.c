@@ -133,20 +133,13 @@ int sys_gremvariable(void) {
 
 
 
-int
-sys_wait2(void)
-{
+int sys_wait2(void){
   int pid;
-  int* wtime = 0;
-  int* rtime = 0;
-  int* iotime = 0;
+  int* wtime;
+  int* rtime;
+  int* iotime;
 
-  if(argint(0, &pid) < 0)
+  if (argint(0, &pid)<0 || argptr(1, (void *)&wtime, sizeof(int*))<0 || argptr(2, (void *)&rtime, sizeof(int*))<0 || argptr(3, (void *)&iotime, sizeof(int*))<0)
     return -1;
-
-  argint(1, wtime);
-  argint(2, rtime);
-  argint(3, iotime);
-
   return wait2(pid, wtime, rtime, iotime);
 }
