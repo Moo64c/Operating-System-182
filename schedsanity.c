@@ -100,14 +100,6 @@ void schedsanity1() {
 }
 
 
-
-
-
-
-
-  // 3 - These processes will perform printing to screen within a medium sized loop
-  // 4 - These processes will perform printing to screen within a very large loop
-
 // 2 - These processes will perform simple calculation within a very large loop
 // 3 - These processes will perform printing to screen within a medium sized loop
 // 4 - These processes will perform printing to screen within a very large loop
