@@ -8,11 +8,14 @@
 #include "traps.h"
 #include "spinlock.h"
 
+
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
+
+
 
 void
 tvinit(void)
@@ -51,22 +54,11 @@ trap(struct trapframe *tf)
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
+      update_tick();
       wakeup(&ticks);
       release(&tickslock);
     }
 
-    if(myproc()) {
-      if(myproc()->state == RUNNING) {
-        myproc()->rtime++;
-        if (ticks - myproc()->lastyield >= QUANTUM) {
-          // Too many ticks in this burst.
-          yield();
-        }
-      }
-      else if(myproc()->state == SLEEPING) {
-        myproc()->iotime++;
-      }
-    }
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:

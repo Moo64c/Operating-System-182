@@ -574,6 +574,26 @@ forkret(void)
   // Return to "caller", actually trapret (see allocproc).
 }
 
+void update_tick(){
+  struct proc *p;
+  acquire(&ptable.lock);
+
+  for(p=ptable.proc; p<&ptable.proc[NPROC]; p++){
+    switch(p->state){
+      case RUNNING:
+        p->rtime++;
+        break;
+      case SLEEPING:
+        p->iotime++;
+        break;
+      default:
+        break;
+    }
+  }
+
+  release(&ptable.lock);
+}
+
 // Atomically release lock and sleep on chan.
 // Reacquires lock when awakened.
 void

@@ -121,6 +121,7 @@ int             wait(void);
 int             wait2(int pid, int* wtime, int* rtime, int* iotime);
 void            wakeup(void*);
 void            yield(void);
+void            update_tick(void);
 
 // Custom
 int             gsetvariable(char* variable_name, char* variable_value);
