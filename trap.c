@@ -56,10 +56,16 @@ trap(struct trapframe *tf)
     }
 
     if(myproc()) {
-      if(myproc()->state == RUNNING)
+      if(myproc()->state == RUNNING) {
         myproc()->rtime++;
-      else if(myproc()->state == SLEEPING)
+        if (ticks - myproc()->lastyield >= QUANTUM) {
+          // Too many ticks in this burst.
+          yield();
+        }
+      }
+      else if(myproc()->state == SLEEPING) {
         myproc()->iotime++;
+      }
     }
     lapiceoi();
     break;

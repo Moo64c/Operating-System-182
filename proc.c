@@ -122,6 +122,7 @@ found:
   p->etime = 0;
   p->rtime = 0;
   p->iotime = 0;
+  p->lastyield = ticks;
   // Set normal priority.
   p->priority = PRIORITY_NORMAL;
   //set approx-run-time for SRT
@@ -200,7 +201,7 @@ fork(void)
   struct proc *curproc = myproc();
 
 
-  
+
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
@@ -236,9 +237,9 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-  
+
   np->approxRtime = QUANTUM; //dealing with SRT SCHEDULING
-  
+
   release(&ptable.lock);
 
   return pid;
@@ -349,18 +350,19 @@ wait2(int pid, int* wtime, int* rtime, int* iotime)
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc || p->pid != pid) {
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if(p->pid != pid) {
           // not good enough.
            continue;
       }
 
       havekids = 1;
-      if(p->state == ZOMBIE){
-        // Found one.
-        *wtime= p->etime - p->ctime - p->rtime - p->iotime;
-        *rtime= p->rtime;
+      if(p->state == ZOMBIE) {
+        *rtime = 10 ; //p->rtime;
         *iotime = p->iotime;
+        *wtime = p->etime - p->ctime - p->rtime - p->iotime;
+        cprintf("pid: %d calculated... wtime %d rtime %d iotime %d p-rtime %d\n", p->pid, (*wtime), (*rtime), (*iotime), p->rtime);
+        // Found one.
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
@@ -440,11 +442,11 @@ scheduler(void)
 
         if(p->state != RUNNABLE)
             continue;
-        
+
         struct proc *p1 = 0;
         struct proc *SRTproc = 0;
         float min_time = p->approxRtime;
-        
+
         //Choose the process with the shortest approxRtime
         for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
            if((p1->state == RUNNABLE) && (p1->approxRtime < min_time)){
@@ -453,13 +455,11 @@ scheduler(void)
               }
               min_time = p1->approxRtime;
               SRTproc = p1;
-            } 
+            }
         }
         if(SRTproc != 0) {
             p = SRTproc;
-          }       
-    
-   
+          }
 
         #else
         #ifdef CFSD
@@ -505,7 +505,7 @@ scheduler(void)
       swtch(&(c->scheduler), p->context);
       switchkvm();
     if(p->rtime == p->approxRtime){
-        p->approxRtime = p->approxRtime + (ALPHA * p->approxRtime); 
+        p->approxRtime = p->approxRtime + (ALPHA * p->approxRtime);
     }
       // Process is done running for now.
       // It should have changed its p->state before coming back.
@@ -549,6 +549,7 @@ yield(void)
   acquire(&ptable.lock);  //DOC: yieldlock
   myproc()->state = RUNNABLE;
   sched();
+  myproc()->lastyield = ticks;
   release(&ptable.lock);
 }
 
