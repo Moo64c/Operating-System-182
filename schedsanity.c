@@ -23,10 +23,12 @@ schedsanity(int calc_type) {
 // 1 - These processes will perform a simple calculation within a medium sized loop
 void schedsanity1() {
   int number_of_children = 5;
-  int pids[number_of_children];
-  int nextlistedpid = 0;
+  //int pids[number_of_children];
+  //int nextlistedpid = 0;
   int curpid = 0;
   int somepid = -1;
+
+  int result = 0;
 
   for (int index = 0; index < number_of_children; index++) {
     curpid = fork();
@@ -38,7 +40,14 @@ void schedsanity1() {
     else if (curpid == 0) {
       // Child. Check PID is in the list.
       somepid = getpid();
-      addpid(somepid, pids, &nextlistedpid);
+      //addpid(somepid, pids, &nextlistedpid);
+
+      // Simple calculation in a medium sized loop.
+      for(int interiorIndex = 0; interiorIndex < 500; interiorIndex++) {
+        result++;
+      }
+      printf(2, "result for pid %d : %d\n", somepid, result);
+      return;
     }
     else {
       // Parent.
@@ -56,12 +65,12 @@ void schedsanity1() {
 // Adds pid to list (if doesn't exist).
 void addpid(int newpid, int *pidlist, int *nextindex) {
   for (int index = 0; index < (*nextindex); index++) {
-    if (*(pidlist + index) == newpid) {
+    if (*(pidlist + (sizeof(int) * index) ) == newpid) {
       return;
     }
   }
   // Not found, add.
-  *(pidlist + *nextindex) = newpid;
+  *(pidlist + (((unsigned int) nextindex) * sizeof(int))) = newpid;
   (*nextindex)++;
   printf(2, "added pid %d to list\n", newpid);
 }
