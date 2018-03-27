@@ -358,7 +358,7 @@ wait2(int pid, int* wtime, int* rtime, int* iotime)
 
       havekids = 1;
       if(p->state == ZOMBIE) {
-        *rtime = 10 ; //p->rtime;
+        *rtime = p->rtime;
         *iotime = p->iotime;
         *wtime = p->etime - p->ctime - p->rtime - p->iotime;
         cprintf("pid: %d calculated... wtime %d rtime %d iotime %d p-rtime %d\n", p->pid, (*wtime), (*rtime), (*iotime), p->rtime);

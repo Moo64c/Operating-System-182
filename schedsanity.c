@@ -26,6 +26,8 @@ int main(int argc, char *argv[])
 	int rtime;
 	int iotime;
 	int i,j;
+        double temp_for_calc = 4.2;
+        double largiiii = 3.14;
 
 //Calculation only - These processes will perform asimple calculation within a medium sized loop
 	sum_wtime[0] = 0;
@@ -36,7 +38,7 @@ int main(int argc, char *argv[])
 		pid = fork();
 		if(pid == 0){
 			for(j=0;j<100;++j){
-				calculation();
+				temp_for_calc = 1.23*(temp_for_calc + calculation());
 				}
 		exit();	
 		}
@@ -58,12 +60,15 @@ int main(int argc, char *argv[])
 	sum_wtime[1] = 0;
 	sum_rtime[1] = 0;
 	sum_iotime[1] = 0;
+        temp_for_calc = 4.2;
+        
 	for(i=0; i< NUM_OF_CHILDS; i++){
 		int pid;
 		pid = fork();
 		if(pid == 0){
-			for(j=0;j<100000;++j){
-				calculation();
+			for(j=0;j<50000000;++j){
+				temp_for_calc = (1.23*(temp_for_calc + calculation())) +largiiii;
+                                largiiii = temp_for_calc / 5.9562;
 				}
 		exit();
 		}	
