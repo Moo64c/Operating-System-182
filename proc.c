@@ -94,6 +94,16 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
 
+  // Reset timing.
+  p->ctime = ticks;
+  p->etime = 0;
+  p->rtime = 0;
+  p->iotime = 0;
+  p->lastyield = ticks;
+  // Set normal priority.
+  p->priority = PRIORITY_NORMAL;
+  //set approx-run-time for SRT
+  p->approxRtime = QUANTUM;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -117,16 +127,6 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
-  // Reset timing.
-  p->ctime = ticks;
-  p->etime = 0;
-  p->rtime = 0;
-  p->iotime = 0;
-  p->lastyield = ticks;
-  // Set normal priority.
-  p->priority = PRIORITY_NORMAL;
-  //set approx-run-time for SRT
-  p->approxRtime = QUANTUM;
 
   return p;
 }
@@ -270,7 +270,6 @@ exit(void)
   iput(curproc->cwd);
   end_op();
   curproc->cwd = 0;
-  curproc->etime = ticks;
 
   acquire(&ptable.lock);
 
@@ -288,6 +287,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  curproc->etime = ticks;
   sched();
   panic("zombie exit");
 }
@@ -337,11 +337,7 @@ wait(void)
 }
 
 
-// Wait for a child process to exit and return its pid.
-// Return -1 if this process has no children.
-int
-wait2(int pid, int* wtime, int* rtime, int* iotime)
-{
+int wait2(int pid, int* wtime, int* rtime, int* iotime){
   struct proc *p;
   int havekids;
   struct proc *curproc = myproc();
@@ -350,19 +346,16 @@ wait2(int pid, int* wtime, int* rtime, int* iotime)
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->pid != pid) {
-          // not good enough.
-           continue;
-      }
-
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid != pid)
+        continue;
       havekids = 1;
-      if(p->state == ZOMBIE) {
-        *rtime = 10 ; //p->rtime;
-        *iotime = p->iotime;
-        *wtime = p->etime - p->ctime - p->rtime - p->iotime;
-        cprintf("pid: %d calculated... wtime %d rtime %d iotime %d p-rtime %d\n", p->pid, (*wtime), (*rtime), (*iotime), p->rtime);
+      if(p->state == ZOMBIE){
         // Found one.
+        *rtime = p->rtime;
+        *iotime = p->iotime;
+        *wtime = p->etime - p->ctime - p->iotime - p->rtime;
+        //pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
@@ -372,7 +365,7 @@ wait2(int pid, int* wtime, int* rtime, int* iotime)
         p->killed = 0;
         p->state = UNUSED;
         release(&ptable.lock);
-        return p->pid;
+        return pid;
       }
     }
 
@@ -793,4 +786,27 @@ void gprintvariables() {
     cprintf("%s => %s\n", (&global_variables[index])->name, (&global_variables[index])->value);
   }
   cprintf("==============\n");
+}
+
+
+// Updates each process's times every tick
+// Called from trap.c, after tick
+void ticked(void){
+  struct proc *p;
+  acquire(&ptable.lock);
+
+  for(p=ptable.proc; p<&ptable.proc[NPROC]; p++){
+    switch(p->state){
+      case RUNNING:
+        p->rtime++;
+        break;
+      case SLEEPING:
+        p->iotime++;
+        break;
+      default:
+        break;
+    }
+  }
+
+  release(&ptable.lock);
 }
