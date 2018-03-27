@@ -15,7 +15,7 @@ schedsanity(int calc_type) {
     case 1:
       schedsanity1();
       break;
-    
+
     case 2:
       schedsanity2();
       break;
@@ -27,11 +27,9 @@ schedsanity(int calc_type) {
 
 // 1 - These processes will perform a simple calculation within a medium sized loop
 void schedsanity1() {
-  int number_of_children = 5;
-  //int pids[number_of_children];
-  //int nextlistedpid = 0;
-  int curpid = 0;
-  int somepid = -1;
+  int number_of_children = 50;
+  int pids[number_of_children];
+  int curpid;
 
   int result = 0;
 
@@ -43,36 +41,42 @@ void schedsanity1() {
       exit();
     }
     else if (curpid == 0) {
-      // Child. Check PID is in the list.
-      somepid = getpid();
-      //addpid(somepid, pids, &nextlistedpid);
+      // Child process.
 
       // Simple calculation in a medium sized loop.
-      for(int interiorIndex = 0; interiorIndex < 500; interiorIndex++) {
-        result++;
+      for(int interiorIndex = 0; interiorIndex < 500000; interiorIndex++) {
+        if (interiorIndex % 2) {
+          result += interiorIndex;
+        }
+        else {
+          result += interiorIndex;
+        }
       }
-      printf(2, "result for pid %d : %d\n", somepid, result);
-      return;
+      exit();
     }
     else {
       // Parent.
-      int t1; int t2; int t3;
-      if (somepid > 0) {
-        wait2(somepid, &t1, &t2, &t3);
-      }
+      pids[index] = curpid;
     }
   }
- 
+
+  int wtime;
+  int rtime;
+  int iotime;
+  for (int index = 0; index < number_of_children; index++) {
+    wait2(pids[index], &wtime, &rtime, &iotime);
+    printf(2, "result for pid %d : wtime %d rtime %d iotime %d\n", curpid, wtime, rtime, iotime);
+  }
 }
 
  // 2 - These processes will perform simple calculation within a very large loop
   void schedsanity2(){
-      int number_of_children = 100;   
+      int number_of_children = 100;
       int result_of_fork = 0;
-      
+
       for (int i =0 ; i< number_of_children ; i++){
           result_of_fork= fork();
-          
+
           //fork() returns a zero to the newly created child process.
           if(result_of_fork == 0){
               printf(2, "i'm a new child\n");
@@ -80,43 +84,36 @@ void schedsanity1() {
         //fork() returns a positive value, the process ID of the child process, to the parent.
         else if (result_of_fork > 0){
             printf(2 , "i'm a parent and my child's process id is :  %d\n" , result_of_fork);
-            
+
         }
         //ERROR - If fork() returns a negative value, the creation of a child process was unsuccessful.
         else if (result_of_fork < 0){
             printf(2, "fork() ERROR! \n");
         }
-          
-    }      
+
+    }
     int calc = 8;
     while (calc < 900){
            calc = calc + 7;
             }
-              
-              
+
+
     }
-      
-      
-      
-      
-      
-  
-  
+  }
+}
+
+
+
+
+
+
+
   // 3 - These processes will perform printing to screen within a medium sized loop
   // 4 - These processes will perform printing to screen within a very large loop
 
-// Adds pid to list (if doesn't exist).
-void addpid(int newpid, int *pidlist, int *nextindex) {
-  for (int index = 0; index < (*nextindex); index++) {
-    if (*(pidlist + (sizeof(int) * index) ) == newpid) {
-      return;
-    }
-  }
-  // Not found, add.
-  *(pidlist + (((unsigned int) nextindex) * sizeof(int))) = newpid;
-  (*nextindex)++;
-  printf(2, "added pid %d to list\n", newpid);
-}
+// 2 - These processes will perform simple calculation within a very large loop
+// 3 - These processes will perform printing to screen within a medium sized loop
+// 4 - These processes will perform printing to screen within a very large loop
 
 int
 main(int argc, char *argv[])
