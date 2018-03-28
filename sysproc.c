@@ -99,12 +99,12 @@ sys_uptime(void)
 /**
  * Sets a variable in the global variables list.
  */
-int sys_gsetvariable(void) {
+int sys_setVariable(void) {
   char * variable_name;
   argstr(0, &variable_name);
   char * variable_value;
   argstr(1, &variable_value);
-  return gsetvariable(variable_name, variable_value);
+  return setVariable(variable_name, variable_value);
 }
 
 /**
@@ -113,25 +113,23 @@ int sys_gsetvariable(void) {
  * @param  variable_value pointer to the value (as reutrn value)
  * @return          0 on success, -1 on not variable found.
  */
-int sys_ggetvariable(void) {
+int sys_getVariable(void) {
   char * variable_name;
   argstr(0, &variable_name);
   char * variable_value;
   argstr(1, &variable_value);
-  return ggetvariable(variable_name, variable_value);
+  return getVariable(variable_name, variable_value);
 }
 
 int sys_gprintvariables(void) {
   gprintvariables();
   return 0;
 }
-int sys_gremvariable(void) {
+int sys_remVariable(void) {
   char* variable_name;
   argstr(0, &variable_name);
-  return gremvariable(variable_name);
+  return remVariable(variable_name);
 }
-
-
 
 int sys_wait2(void){
   int pid;
@@ -142,4 +140,13 @@ int sys_wait2(void){
   if (argint(0, &pid)<0 || argptr(1, (void *)&wtime, sizeof(int*))<0 || argptr(2, (void *)&rtime, sizeof(int*))<0 || argptr(3, (void *)&iotime, sizeof(int*))<0)
     return -1;
   return wait2(pid, wtime, rtime, iotime);
+}
+
+int sys_set_priority(void){
+  int priority;
+
+  if (argint(0, &priority) <0 ) {
+    return -1;
+  }
+  return set_priority(priority);
 }

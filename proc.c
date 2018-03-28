@@ -7,7 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
-#define debug 1
+#define debug 0
 #define PRIORITY_HIGH 0.75
 #define PRIORITY_NORMAL 1.0
 #define PRIORITY_LOW 1.25
@@ -361,7 +361,9 @@ wait2(int pid, int* wtime, int* rtime, int* iotime)
         *rtime = p->rtime;
         *iotime = p->iotime;
         *wtime = p->etime - p->ctime - p->rtime - p->iotime;
-        cprintf("pid: %d calculated... wtime %d rtime %d iotime %d p-rtime %d\n", p->pid, (*wtime), (*rtime), (*iotime), p->rtime);
+        if (debug) {
+          cprintf("pid: %d calculated... wtime %d rtime %d iotime %d p-rtime %d\n", p->pid, (*wtime), (*rtime), (*iotime), p->rtime);
+        }
         // Found one.
         kfree(p->kstack);
         p->kstack = 0;
@@ -729,7 +731,7 @@ int next_index = 0;
 /**
  * Sets a variable in the global variables list.
  */
-int gsetvariable(char* variable_name, char* variable_value) {
+int setVariable(char* variable_name, char* variable_value) {
   // Check variable name name is valid.
   for (int index = 0; index < strlen(variable_name); index++) {
     if
@@ -782,7 +784,7 @@ int gsetvariable(char* variable_name, char* variable_value) {
  * @param  variable_value pointer to the value (as reutrn value)
  * @return          0 on success, -1 on not variable found.
  */
-int ggetvariable(char* variable_name, char *variable_value) {
+int getVariable(char* variable_name, char *variable_value) {
   for (int index = 0; index < next_index; index++) {
     if (strncmp((&global_variables[index])->name, variable_name, strlen(variable_name)) == 0) {
       // Found the variable.
@@ -794,7 +796,7 @@ int ggetvariable(char* variable_name, char *variable_value) {
   return -1;
 }
 
-int gremvariable(char* variable_name) {
+int remVariable(char* variable_name) {
   for (int index = 0; index < next_index; index++) {
     if (strncmp((&global_variables[index])->name, variable_name, strlen(variable_name)) == 0) {
       // Found the variable... just set 0 to everything.
@@ -813,4 +815,24 @@ void gprintvariables() {
     cprintf("%s => %s\n", (&global_variables[index])->name, (&global_variables[index])->value);
   }
   cprintf("==============\n");
+}
+
+// Sets current process' priority.
+int set_priority(int priority) {
+  float value = -1;
+  if (priority == 1) {
+    value = PRIORITY_HIGH;
+  }
+  else if (priority == 3) {
+    value = PRIORITY_LOW;
+  }
+  else if (priority == 2) {
+    value = PRIORITY_NORMAL;
+  }
+  else {
+    // Failed - return -1.
+    return value;
+  }
+  myproc()->priority = value;
+  return 0;
 }

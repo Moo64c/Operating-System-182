@@ -24,12 +24,13 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int yield(void);
-int gsetvariable(char* variable, char* value);
-int ggetvariable(char* variable, char* value);
-int gremvariable(char* variable);
+int setVariable(char* variable, char* value);
+int getVariable(char* variable, char* value);
+int remVariable(char* variable);
 void gprintvariables();
 int wait2(int pid, int* wtime, int* rtime, int* iotime);
 void update_tick(void);
+int set_priority(int priority);
 
 // ulib.c
 int stat(char*, struct stat*);

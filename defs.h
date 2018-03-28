@@ -122,11 +122,12 @@ int             wait2(int pid, int* wtime, int* rtime, int* iotime);
 void            wakeup(void*);
 void            yield(void);
 void            update_tick(void);
+int             set_priority(int priority);
 
 // Custom
-int             gsetvariable(char* variable_name, char* variable_value);
-int             ggetvariable(char* variable_name, char* variable_value);
-int             gremvariable(char* variable_name);
+int             setVariable(char* variable_name, char* variable_value);
+int             getVariable(char* variable_name, char* variable_value);
+int             remVariable(char* variable_name);
 void            gprintvariables();
 
 // swtch.S

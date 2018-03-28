@@ -104,11 +104,12 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_yield(void);
-extern int sys_ggetvariable(void);
-extern int sys_gsetvariable(void);
-extern int sys_gremvariable(void);
+extern int sys_getVariable(void);
+extern int sys_setVariable(void);
+extern int sys_remVariable(void);
 extern int sys_gprintvariables(void);
 extern int sys_wait2(void);
+extern int sys_set_priority(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -133,11 +134,12 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_yield]   sys_yield,
-[SYS_ggetvariable] sys_ggetvariable,
-[SYS_gsetvariable] sys_gsetvariable,
-[SYS_gremvariable] sys_gremvariable,
+[SYS_getVariable] sys_getVariable,
+[SYS_setVariable] sys_setVariable,
+[SYS_remVariable] sys_remVariable,
 [SYS_gprintvariables] sys_gprintvariables,
 [SYS_wait2] sys_wait2,
+[SYS_set_priority] sys_set_priority,
 };
 
 void

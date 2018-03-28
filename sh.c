@@ -312,7 +312,7 @@ main(void)
           char * var_name =  (char *) malloc(sizeof(char) * 128);
           char * var_value = (char *) malloc(sizeof(char) * 128);
           memmove(var_name, buf + isVariableName, (index - isVariableName));
-          ggetvariable(var_name, var_value);
+          getVariable(var_name, var_value);
           // Rebuild buf.
           int newbuf_length = strlen(buf) + strlen(var_value) - (strlen(var_name) - 1);
           char * new_buf = (char *) malloc(sizeof(char) * newbuf_length);
@@ -356,7 +356,7 @@ main(void)
       char *variable_value = (char *)malloc(sizeof(char) * (strlen(buf) - name_length - 1));
       memmove(variable_name, buf, name_length);
       memmove(variable_value, buf+name_length+1, (strlen(buf) - name_length - 1));
-      gsetvariable(variable_name, variable_value);
+      setVariable(variable_name, variable_value);
       continue;
     }
 
